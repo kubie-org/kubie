@@ -190,6 +190,38 @@ hooks:
     stop_ctx: >
         echo -en "\033]1; $SHELL \007"
 
+# Customize drop-down skim menu display options.
+# Kubie uses skim as fzf-compatible Rust library for interactive menus.
+fzf:
+    # Enable mouse support in the selectable menu.
+    # Default: true
+    mouse: true
+
+    # Reverse the layout of the menu (show prompt at top).
+    # Default: false
+    reverse: false
+
+    # Enable case-insensitive search.
+    # Default: false
+    ignore_case: false
+
+    # Hide the info line (match count).
+    # Default: false
+    info_hidden: false
+
+    # Set the height of the menu. Can be a percentage (e.g., "50%") or a fixed
+    # number of rows (e.g., "20").
+    # Default: unset (uses full screen)
+    height: "50%"
+
+    # Customize the prompt string.
+    # Default: unset
+    prompt: "> "
+
+    # Set a color scheme. See skim documentation for color format.
+    # See more option in skim docs: https://github.com/skim-rs/skim?tab=readme-ov-file#color-scheme
+    # Default: unset
+    color: "dark"
 ```
 
 ## For distro maintainers

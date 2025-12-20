@@ -31,11 +31,19 @@ pub fn expanduser(path: &str) -> String {
 
 #[derive(Default, Debug, Deserialize)]
 pub struct Fzf {
+    #[serde(default = "def_bool_true")]
     pub mouse: bool,
+    #[serde(default)]
     pub reverse: bool,
+    #[serde(default)]
     pub ignore_case: bool,
+    #[serde(default)]
     pub info_hidden: bool,
+    #[serde(default)]
+    pub height: Option<String>,
+    #[serde(default)]
     pub prompt: Option<String>,
+    #[serde(default)]
     pub color: Option<String>,
 }
 
