@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use skim::SkimOptions;
 
 use crate::cmd::{select_or_list_context, SelectResult};
@@ -20,22 +20,27 @@ fn enter_context(
     let state = State::load()?;
     let mut session = Session::load()?;
 
-    let namespace_name =
-        namespace_name.or_else(|| state.namespace_history.get(context_name).and_then(|s| s.as_deref()));
-
     let kubeconfig = if context_name == "-" {
-        let previous_ctx = session
-            .get_last_context()
-            .context("There is no previous context to switch to.")?;
-        installed.make_kubeconfig_for_context(&previous_ctx.context, previous_ctx.namespace.as_deref())?
+        if let Some(previous) = session.get_last_context() {
+            // Inside a kubie shell: switch to the previous context from session history
+            let ns = namespace_name.or(previous.namespace.as_deref());
+            installed.make_kubeconfig_for_context(&previous.context, ns)?
+        } else if let Some(ref last) = state.last_context {
+            // Outside a kubie shell: fall back to the last globally-used context
+            let ns = namespace_name.or_else(|| state.namespace_history.get(last).and_then(|s| s.as_deref()));
+            installed.make_kubeconfig_for_context(last, ns)?
+        } else {
+            anyhow::bail!("There is no previous context to switch to.");
+        }
     } else {
-        installed.make_kubeconfig_for_context(context_name, namespace_name)?
+        let ns = namespace_name.or_else(|| state.namespace_history.get(context_name).and_then(|s| s.as_deref()));
+        installed.make_kubeconfig_for_context(context_name, ns)?
     };
 
-    session.add_history_entry(
+    session.record_context_entry(
         &kubeconfig.contexts[0].name,
         kubeconfig.contexts[0].context.namespace.as_deref(),
-    );
+    )?;
 
     if settings.behavior.validate_namespaces.can_list_namespaces() {
         if let Some(namespace_name) = namespace_name {

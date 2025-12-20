@@ -4,6 +4,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::ioutil;
+use crate::state::State;
 use crate::vars;
 
 /// Session contains information which is scoped to a kubie shell.
@@ -42,6 +43,25 @@ impl Session {
         self.history.push(HistoryEntry {
             context: context.into(),
             namespace: namespace.map(Into::into),
+        })
+    }
+
+    pub fn record_context_entry(
+        &mut self,
+        context_name: impl Into<String>,
+        namespace: Option<impl Into<String>>,
+    ) -> Result<()> {
+        let ctx = context_name.into();
+        let ns = namespace.map(Into::into);
+
+        self.add_history_entry(&ctx, ns.as_deref());
+
+        State::modify(|s| {
+            if ns.is_some() {
+                s.namespace_history.insert(ctx.clone(), ns);
+            }
+            s.last_context = Some(ctx);
+            Ok(())
         })
     }
 

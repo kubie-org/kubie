@@ -62,7 +62,7 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 
 * `kubie ctx` display a selectable menu of contexts
 * `kubie ctx <context>` switch the current shell to the given context (spawns a shell if not a kubie shell)
-* `kubie ctx -` switch back to the previous context
+* `kubie ctx -` switch back to the previous context (session history inside a kubie shell, last globally-used context otherwise)
 * `kubie ctx <context> -r` spawn a recursive shell in the given context
 * `kubie ctx <context> -n <namespace>` spawn a shell in the given context and namespace
 * `kubie ns` display a selectable menu of namespaces
