@@ -37,9 +37,14 @@ if [[ -f "$HOME/.zshenv" ]] ; then
     fi
 fi
 
-# If a zsh_history file exists, copy it over before zsh initialization so history is maintained
-if [[ -f "$HOME/.zsh_history" ]] ; then
-    cp $HOME/.zsh_history $ZDOTDIR
+# Configure HISTFILE to an existing .zsh_history unless already configured to preserve history.
+if [[ -f "$HISTFILE" ]] ; then
+    # We are using the user's configured history file.
+    :
+elif [[ -f "$_KUBIE_USER_ZDOTDIR/.zsh_history" ]] ; then
+    export HISTFILE="$_KUBIE_USER_ZDOTDIR/.zsh_history"
+elif [[ -f "$HOME/.zsh_history" ]] ; then
+    export HISTFILE="$HOME/.zsh_history"
 fi
 
 KUBIE_LOGIN_SHELL=0
