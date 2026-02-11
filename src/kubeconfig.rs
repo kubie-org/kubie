@@ -258,6 +258,8 @@ where
         users: vec![],
     };
 
+    let mut load_errors: Vec<String> = vec![];
+
     for path in kubeconfigs.into_iter() {
         let path = path.as_ref();
 
@@ -282,8 +284,16 @@ where
                     .extend(kubeconfig.users.drain(..).map(|x| Sourced::new(&path, x)));
             }
             Err(err) => {
-                eprintln!("Error loading kubeconfig {}: {}", path.display(), err);
+                load_errors.push(format!("Error loading kubeconfig {}: {}", path.display(), err));
             }
+        }
+    }
+
+    // Only print load errors when no contexts were found, to avoid
+    // noisy warnings about broken files when valid configs exist.
+    if installed.contexts.is_empty() {
+        for err in &load_errors {
+            eprintln!("{}", err);
         }
     }
 
