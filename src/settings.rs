@@ -57,12 +57,9 @@ pub struct Settings {
     pub fzf: Fzf,
 }
 
-/// Check if a path is a kubie settings file (kubie.yaml or kubie.yml).
-fn is_kubie_settings_file(path: &Path) -> bool {
-    match path.file_name().and_then(|f| f.to_str()) {
-        Some("kubie.yaml") | Some("kubie.yml") => path.is_file(),
-        _ => false,
-    }
+/// Check if a path has a kubie settings filename.
+fn is_kubie_settings_name(path: &Path) -> bool {
+    matches!(path.file_name().and_then(|f| f.to_str()), Some("kubie.yaml") | Some("kubie.yml"))
 }
 
 /// Parse KUBECONFIG into individual entries (colon-separated on unix).
@@ -73,29 +70,32 @@ fn parse_kubeconfig_env() -> Vec<PathBuf> {
     }
 }
 
+/// Find a kubie settings file (kubie.yaml or kubie.yml) in a directory.
+fn find_settings_in_dir(dir: &Path) -> Option<String> {
+    ["kubie.yaml", "kubie.yml"].iter().find_map(|name| {
+        let c = dir.join(name);
+        if c.is_file() { c.to_str().map(String::from) } else { None }
+    })
+}
+
 impl Settings {
     pub fn path() -> String {
-        // Check KUBECONFIG entries for a kubie settings file.
         for entry in parse_kubeconfig_env() {
-            if is_kubie_settings_file(&entry) {
+            if is_kubie_settings_name(&entry) && entry.is_file() {
                 if let Some(s) = entry.to_str() {
                     return s.to_string();
                 }
             }
-            if entry.is_dir() {
-                let candidate = entry.join("kubie.yaml");
-                if candidate.is_file() {
-                    if let Some(s) = candidate.to_str() {
-                        return s.to_string();
-                    }
-                }
-                let candidate = entry.join("kubie.yml");
-                if candidate.is_file() {
-                    if let Some(s) = candidate.to_str() {
-                        return s.to_string();
-                    }
-                }
+            if let Some(s) = find_settings_in_dir(&entry) {
+                return s;
             }
+        }
+
+        let xdg_config = std::env::var("XDG_CONFIG_HOME")
+            .unwrap_or_else(|_| format!("{}/.config", home_dir()));
+        let xdg_dir = Path::new(&xdg_config).join("kubie");
+        if let Some(s) = find_settings_in_dir(&xdg_dir) {
+            return s;
         }
 
         format!("{}/.kube/kubie.yaml", home_dir())
@@ -121,16 +121,14 @@ impl Settings {
     pub fn get_kube_configs_paths(&self) -> Result<HashSet<PathBuf>> {
         let mut paths = HashSet::new();
 
-        // Include kubeconfig files from KUBECONFIG env var.
         for entry in parse_kubeconfig_env() {
-            if entry.is_file() && !is_kubie_settings_file(&entry) {
+            if entry.is_file() && !is_kubie_settings_name(&entry) {
                 paths.insert(entry);
             } else if entry.is_dir() {
                 for pattern in &["*.yml", "*.yaml"] {
-                    let full = format!("{}/{}", entry.display(), pattern);
-                    for matched in glob(&full)? {
+                    for matched in glob(&format!("{}/{pattern}", entry.display()))? {
                         let path = matched?;
-                        if !is_kubie_settings_file(&path) {
+                        if !is_kubie_settings_name(&path) {
                             paths.insert(path);
                         }
                     }
@@ -139,15 +137,13 @@ impl Settings {
         }
 
         for inc in &self.configs.include {
-            let expanded = expanduser(inc);
-            for entry in glob(&expanded)? {
+            for entry in glob(&expanduser(inc))? {
                 paths.insert(entry?);
             }
         }
 
         for exc in &self.configs.exclude {
-            let expanded = expanduser(exc);
-            for entry in glob(&expanded)? {
+            for entry in glob(&expanduser(exc))? {
                 paths.remove(&entry?);
             }
         }
@@ -370,5 +366,21 @@ mod tests {
 
         let paths = settings.get_kube_configs_paths().unwrap();
         assert!(paths.is_empty());
+    }
+
+    #[test]
+    fn test_xdg_config_home() {
+        std::env::remove_var("KUBECONFIG");
+        let dir = tempfile::tempdir().unwrap();
+        let kubie_dir = dir.path().join("kubie");
+        fs::create_dir_all(&kubie_dir).unwrap();
+        fs::write(kubie_dir.join("kubie.yaml"), "configs: {}").unwrap();
+
+        std::env::set_var("XDG_CONFIG_HOME", dir.path().to_str().unwrap());
+
+        let path = Settings::path();
+        assert_eq!(path, kubie_dir.join("kubie.yaml").to_str().unwrap());
+
+        std::env::remove_var("XDG_CONFIG_HOME");
     }
 }
