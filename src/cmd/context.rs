@@ -32,10 +32,11 @@ fn enter_context(
         installed.make_kubeconfig_for_context(context_name, namespace_name)?
     };
 
-    session.add_history_entry(
+    session.record_context_entry(
         &kubeconfig.contexts[0].name,
         kubeconfig.contexts[0].context.namespace.as_deref(),
-    );
+        settings.behavior.track_last_used,
+    )?;
 
     if settings.behavior.validate_namespaces.can_list_namespaces() {
         if let Some(namespace_name) = namespace_name {
@@ -64,12 +65,29 @@ pub fn context(
     namespace_name: Option<String>,
     kubeconfigs: Vec<String>,
     recursive: bool,
+    last_used: bool,
 ) -> Result<()> {
     let mut installed = if kubeconfigs.is_empty() {
         kubeconfig::get_installed_contexts(settings)?
     } else {
         kubeconfig::get_kubeconfigs_contexts(&kubeconfigs)?
     };
+
+    let mut context_name = context_name;
+
+    if last_used && context_name.is_none() {
+        let state = State::load().unwrap_or_default();
+        if let Some(saved) = state.last_context {
+            let exists = installed.find_context_by_name(&saved).is_some();
+            if exists {
+                context_name = Some(saved);
+            } else {
+                return Ok(()); // no-op: saved context doesn't exist anymore
+            }
+        } else {
+            return Ok(()); // no-op: nothing recorded
+        }
+    }
 
     let context_name = match context_name {
         Some(context_name) => context_name,

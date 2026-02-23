@@ -188,6 +188,8 @@ pub struct Behavior {
     pub print_context_in_exec: ContextHeaderBehavior,
     #[serde(default = "def_bool_false")]
     pub allow_multiple_context_patterns: bool,
+    #[serde(default = "def_bool_false")]
+    pub track_last_used: bool,
 }
 
 #[derive(Debug, Deserialize, Default)]

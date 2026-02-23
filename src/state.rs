@@ -38,6 +38,10 @@ pub mod paths {
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct State {
+    /// The most recently entered context across all sessions.
+    /// Only updated when `track_last_used` config option is enabled.
+    pub last_context: Option<String>,
+
     /// This map stores the last namespace in which a context was used, in order to restore the namespace
     /// when the context is entered again.
     ///
