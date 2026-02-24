@@ -31,6 +31,7 @@ tempfile = "3"
 which = "7"
 wildmatch = "2"
 skim = "0.20"
+shlex = "1"
 
 [target.arm-unknown-linux-musleabi.dependencies]
 aws-lc-rs = { version = "1.15", default-features = false, features = [
