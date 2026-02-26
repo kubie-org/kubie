@@ -58,6 +58,21 @@ kubie generate-completion fish | source
 See the [clap-complete docs](https://docs.rs/clap_complete/latest/clap_complete/aot/enum.Shell.html) for all supported
 shells.
 
+
+#### Zsh
+
+Autocomplete with Zsh can either be installed by sourcing the file eg.:
+
+```bash
+source ./completion/kubie.zsh
+```
+
+Or by adding the file to one of your [`fpath`](https://zsh.sourceforge.io/Doc/Release/Functions.html#Autoloading-Functions) folders, for instance `~/.zsh`, and making sure [zsh autocompletion is initialized](https://zsh.sourceforge.io/Doc/Release/Completion-System.html#Initialization) ([for instance](https://docs.brew.sh/Shell-Completion#configuring-completions-in-zsh)):
+```bash
+cp ./completion/kubie.zsh ~/.zsh/_kubie
+```
+
+
 ## Usage
 Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 
