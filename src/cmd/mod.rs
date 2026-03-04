@@ -36,7 +36,8 @@ pub fn select_or_list_context(skim_options: &SkimOptions, installed: &mut Instal
         return Ok(SelectResult::Selected(context_names[0].clone()));
     }
 
-    if io::stdout().is_terminal() {
+    // Allow interactive selection if stdin OR stderr is a terminal
+    if io::stdin().is_terminal() || io::stderr().is_terminal() {
         // NOTE: skim shows the list of context names in reverse order
         context_names.reverse();
         let item_reader = SkimItemReader::default();
@@ -68,7 +69,8 @@ pub fn select_or_list_namespace(skim_options: &SkimOptions, namespaces: Option<V
         bail!("No namespaces found");
     }
 
-    if io::stdout().is_terminal() {
+    // Allow interactive selection if stdin OR stderr is a terminal
+    if io::stdin().is_terminal() || io::stderr().is_terminal() {
         // NOTE: skim shows the list of namespaces in reverse order
         namespaces.reverse();
         let item_reader = SkimItemReader::default();

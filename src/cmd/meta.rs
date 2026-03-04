@@ -22,6 +22,10 @@ pub enum Kubie {
         #[clap(short = 'r', long = "recursive")]
         recursive: bool,
 
+        /// Avoids spawning a new shell.
+        #[clap(long = "eval")]
+        eval: bool,
+
         /// Name of the context to enter. Use '-' to switch back to the previous context.
         context_name: Option<String>,
     },

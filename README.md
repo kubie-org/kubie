@@ -65,6 +65,7 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 
 * `kubie ctx` display a selectable menu of contexts
 * `kubie ctx <context>` switch the current shell to the given context (spawns a shell if not a kubie shell)
+* `kubie ctx <context> --eval` avoids spawning a new shell
 * `kubie ctx -` switch back to the previous context
 * `kubie ctx <context> -r` spawn a recursive shell in the given context
 * `kubie ctx <context> -n <namespace>` spawn a shell in the given context and namespace
@@ -86,6 +87,26 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 * `kubie info ns` print name of current namespace
 * `kubie info depth` print depth of recursive contexts
 * `kubie update` will check the latest kubie version and update your local installation if needed
+
+### Faster context switching with eval
+
+You can switch contexts without spawning a new shell using the `--eval` flag, which may improve perfomance.
+This avoids the overhead of shell initialization, but loses isolation provided by default mode:
+
+- Env variables (`KUBECONFIG`, `KUBIE_ACTIVE`, etc.) are set in your current shell session and persist until explicitly unset or the shell exits
+- Sourcing your shell configuration (`source ~/.zshrc` or `source ~/.bashrc`) will **not** clear these variables
+
+You can use it by adding such function to your shell's configuration file (`~/.bashrc`, `~/.zshrc`, etc.):
+
+```bash
+kubie() {
+    if [[ "$1" == "ctx" ]] && [[ "$2" != "--help" ]] && [[ "$2" != "" ]]; then
+        eval $(command kubie ctx --eval "${@:2}")
+    else
+        command kubie "$@"
+    fi
+}
+```
 
 ## Settings
 You can customize kubie's behavior with the `~/.kube/kubie.yaml` file. The settings available and their defaults are
