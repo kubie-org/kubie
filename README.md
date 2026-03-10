@@ -58,6 +58,46 @@ kubie generate-completion fish | source
 See the [clap-complete docs](https://docs.rs/clap_complete/latest/clap_complete/aot/enum.Shell.html) for all supported
 shells.
 
+### Key Bindings
+
+Kubie provides shell key bindings for quick context and namespace switching.
+
+> [!NOTE]
+> Key bindings are currently only supported for ZSH.
+
+#### Installation
+
+Add the following to your shell's configuration file:
+
+```sh
+source <(kubie generate-key-bindings)
+```
+
+#### Default Key Bindings
+
+- `Alt-k` - Open interactive context selector (`kubie ctx`)
+- `Alt-n` - Open interactive namespace selector (`kubie ns`)
+- `Alt-K` - Switch to previous context (`kubie ctx -`)
+- `Alt-N` - Switch to previous namespace (`kubie ns -`)
+
+#### Customization
+
+You can customize the key bindings by setting environment variables before sourcing the script:
+
+```sh
+# Example: Change Alt-k to Ctrl-k
+export KUBIE_CTX_KEY='^k'
+
+# Example: Disable a specific binding
+export KUBIE_NS_KEY=''
+```
+
+Available customization variables:
+- `KUBIE_CTX_KEY` - Context selector (default: `\ek` = Alt-k)
+- `KUBIE_NS_KEY` - Namespace selector (default: `\en` = Alt-n)
+- `KUBIE_PREV_CTX_KEY` - Previous context (default: `\eK` = Alt-K)
+- `KUBIE_PREV_NS_KEY` - Previous namespace (default: `\eN` = Alt-N)
+
 ## Usage
 Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 
@@ -85,6 +125,8 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 * `kubie info ctx` print name of current context
 * `kubie info ns` print name of current namespace
 * `kubie info depth` print depth of recursive contexts
+* `kubie generate-completion` generate shell completion script
+* `kubie generate-key-bindings` generate shell key bindings script
 * `kubie update` will check the latest kubie version and update your local installation if needed
 
 ## Settings

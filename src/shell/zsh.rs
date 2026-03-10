@@ -165,3 +165,7 @@ add-zsh-hook precmd __kubie_cmd_pre_cmd__
 
     Ok(())
 }
+
+pub fn key_bindings() -> &'static str {
+    include_str!("../../shell/key-bindings/kubie.zsh")
+}
