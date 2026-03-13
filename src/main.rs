@@ -28,6 +28,7 @@ fn main() -> Result<()> {
             context_name,
             kubeconfigs,
             recursive,
+            last_used,
         } => {
             cmd::context::context(
                 &settings,
@@ -36,6 +37,7 @@ fn main() -> Result<()> {
                 namespace_name,
                 kubeconfigs,
                 recursive,
+                last_used,
             )?;
         }
         Kubie::Namespace {

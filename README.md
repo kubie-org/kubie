@@ -65,12 +65,13 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 
 * `kubie ctx` display a selectable menu of contexts
 * `kubie ctx <context>` switch the current shell to the given context (spawns a shell if not a kubie shell)
-* `kubie ctx -` switch back to the previous context
+* `kubie ctx -` switch back to the previous context within current shell session
+* `kubie ctx --last-used` switch to the last used context (relies on `track_last_used` config option)
 * `kubie ctx <context> -r` spawn a recursive shell in the given context
 * `kubie ctx <context> -n <namespace>` spawn a shell in the given context and namespace
 * `kubie ns` display a selectable menu of namespaces
 * `kubie ns <namespace>` switch the current shell to the given namespace
-* `kubie ns -` switch back to the previous namespace
+* `kubie ns -` switch back to the previous namespace within current shell session
 * `kubie ns <namespace> -r` spawn a recursive shell in the given namespace
 * `kubie exec <context> <namespace> <cmd> <args>...` execute a command in the given context and namespace
 * `kubie exec <wildcard> <namespace> <cmd> <args>...` execute a command in all the contexts matched by the wildcard and
@@ -175,6 +176,11 @@ behavior:
     #   kubie exec 'dev-* pre-* staging-1 prod-2' kube-system -- kubectl get po
     # Default: false
     allow_multiple_context_patterns: false
+
+    # Track the last used context globally and allow restoring it with
+    # `kubie ctx --last-used`. This persists across terminal sessions.
+    # Default: false
+    track_last_used: false
 
 # Optional start and stop hooks
 hooks:
