@@ -18,11 +18,8 @@ pub fn spawn_shell(info: &ShellSpawnInfo) -> Result<()> {
 # https://xon.sh/xonshrc.html
 from pathlib import Path
 
-files = [
-    "/etc/xonshrc",
-    "~/.xonshrc",
-    "~/.config/xonsh/rc.xsh",
-]
+files = $XONSHRC
+
 for file in files:
     if Path(file).is_file():
         source @(file)
