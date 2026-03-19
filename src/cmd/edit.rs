@@ -1,31 +1,58 @@
 use std::env;
+use std::fmt::Display;
 use std::path::PathBuf;
 use std::process::Command;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use which::which;
 
 use crate::cmd::{select_or_list_context, SelectResult};
 use crate::kubeconfig;
 use crate::settings::Settings;
 
-fn get_editor(settings: &Settings) -> Result<PathBuf> {
-    if let Some(default_editor) = &settings.default_editor {
-        if let Ok(path) = which(default_editor) {
-            return Ok(path);
-        }
-    }
+struct EditorCommand {
+    executable: PathBuf,
+    args: Vec<String>,
+}
 
-    env::var("EDITOR")
-        .ok()
-        .and_then(|editor| which(editor).ok())
+impl Display for EditorCommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.args.is_empty() {
+            return write!(f, "{}", self.executable.display());
+        }
+        write!(f, "{} {}", self.executable.display(), self.args.join(" "))
+    }
+}
+
+fn parse_editor_command(raw: &str) -> Result<EditorCommand> {
+    let mut parts = raw.split_whitespace();
+    let executable = parts.next().context("executable is empty")?.into();
+    let args: Vec<String> = parts.map(String::from).collect();
+    Ok(EditorCommand { executable, args })
+}
+
+fn get_editor(settings: &Settings) -> Result<EditorCommand> {
+    settings
+        .default_editor
+        .as_deref()
+        .map(|editor| {
+            parse_editor_command(editor)
+                .with_context(|| format!("unable to parse default_editor command {}", editor))
+        })
         .or_else(|| {
-            for editor in &["nvim", "vim", "emacs", "vi", "nano"] {
-                if let Ok(path) = which(editor) {
-                    return Some(path);
-                }
-            }
-            None
+            env::var("EDITOR").ok().map(|editor| {
+                parse_editor_command(&editor)
+                    .with_context(|| format!("unable to parse EDITOR command {}", editor))
+            })
+        })
+        .transpose()?
+        .or_else(|| {
+            ["nvim", "vim", "emacs", "vi", "nano"].iter().find_map(|editor| {
+                which(editor).ok().map(|path| EditorCommand {
+                    executable: path,
+                    args: vec![],
+                })
+            })
         })
         .ok_or_else(|| anyhow!("Could not find any editor to use"))
 }
@@ -46,19 +73,27 @@ pub fn edit_context(settings: &Settings, context_name: Option<String>) -> Result
         .find_context_by_name(&context_name)
         .ok_or_else(|| anyhow!("Could not find context {}", context_name))?;
 
-    let editor = get_editor(settings)?;
+    let command = get_editor(settings)?;
 
-    let mut job = Command::new(editor).arg(context_src.source.as_ref()).spawn()?;
+    let mut job = Command::new(&command.executable)
+        .args(&command.args)
+        .arg(context_src.source.as_ref())
+        .spawn()
+        .context(format!("Failed to spawn editor command '{}'", command))?;
     job.wait()?;
 
     Ok(())
 }
 
 pub fn edit_config(settings: &Settings) -> Result<()> {
-    let editor = get_editor(settings)?;
+    let command = get_editor(settings)?;
     let settings_path = Settings::path();
 
-    let mut job = Command::new(editor).arg(settings_path).spawn()?;
+    let mut job = Command::new(&command.executable)
+        .args(&command.args)
+        .arg(settings_path)
+        .spawn()
+        .context(format!("Failed to spawn editor command '{}'", command))?;
     job.wait()?;
 
     Ok(())
