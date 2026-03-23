@@ -15,8 +15,8 @@ version = "0.26.1"
 
 [dependencies]
 anyhow = "1"
-clap = { version = "4.5.53", features = ["derive"] }
-clap_complete = "4.5.62"
+clap = { version = "4.5.60", features = ["derive"] }
+clap_complete = "4.6.0"
 cfg-if = "1"
 dirs = "6"
 fs2 = "0.4"
@@ -33,7 +33,7 @@ wildmatch = "2"
 skim = "0.20"
 
 [target.arm-unknown-linux-musleabi.dependencies]
-aws-lc-rs = { version = "1.15", default-features = false, features = [
+aws-lc-rs = { version = "1.16", default-features = false, features = [
     "aws-lc-sys",
     "prebuilt-nasm",
     "bindgen",
