@@ -30,7 +30,7 @@ pub fn get_namespaces<'a>(kubeconfig: impl Into<Option<&'a KubeConfig>>) -> anyh
     let result = cmd.output()?;
     if !result.status.success() {
         let stderr = str::from_utf8(&result.stderr).unwrap_or("could not decode stderr of kubectl as utf-8");
-        return Err(anyhow!("Error calling kubectl: {}", stderr));
+        return Err(anyhow!("Error calling kubectl:\n{}", stderr));
     }
 
     let text = str::from_utf8(&result.stdout)?;

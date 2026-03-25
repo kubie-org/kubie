@@ -1,6 +1,6 @@
 use std::io::{self, Cursor, IsTerminal};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use skim::prelude::{Key, SkimItemReader};
 use skim::{Skim, SkimOptions};
 
@@ -60,7 +60,10 @@ pub fn select_or_list_context(skim_options: &SkimOptions, installed: &mut Instal
 }
 
 pub fn select_or_list_namespace(skim_options: &SkimOptions, namespaces: Option<Vec<String>>) -> Result<SelectResult> {
-    let mut namespaces = namespaces.unwrap_or_else(|| kubectl::get_namespaces(None).expect("could not get namespaces"));
+    let mut namespaces = match namespaces {
+        Some(ns) => ns,
+        None => kubectl::get_namespaces(None).context("Could not get namespaces")?,
+    };
 
     namespaces.sort();
 
