@@ -1403,6 +1403,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "shlex",
  "signal-hook 0.4.3",
  "skim",
  "tempfile",

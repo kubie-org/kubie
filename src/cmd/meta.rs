@@ -22,6 +22,10 @@ pub enum Kubie {
         #[clap(short = 'r', long = "recursive")]
         recursive: bool,
 
+        /// Outputs shell statements to be eval'd in the current shell.
+        #[clap(long = "eval", conflicts_with = "recursive")]
+        eval: bool,
+
         /// Name of the context to enter. Use '-' to switch back to the previous context.
         context_name: Option<String>,
     },
@@ -33,6 +37,10 @@ pub enum Kubie {
         /// Enter the namespace by spawning a new recursive shell.
         #[clap(short = 'r', long = "recursive")]
         recursive: bool,
+
+        /// Outputs shell statements to be eval'd in the current shell.
+        #[clap(long = "eval", conflicts_with = "recursive")]
+        eval: bool,
 
         /// Unsets the namespace in the currently active context.
         #[clap(short = 'u', long = "unset")]

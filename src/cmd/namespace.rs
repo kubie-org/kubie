@@ -1,18 +1,17 @@
 use anyhow::{anyhow, Context, Result};
 
-use crate::cmd::{select_or_list_namespace, SelectResult};
+use crate::cmd::{select_or_list_namespace, ActivationMode, SelectResult};
 use crate::kubeconfig;
 use crate::kubectl;
 use crate::session::Session;
 use crate::settings::{Settings, ValidateNamespacesBehavior};
-use crate::shell::spawn_shell;
 use crate::state::State;
 use crate::vars;
 
 pub fn namespace(
     settings: &Settings,
     namespace_name: Option<String>,
-    recursive: bool,
+    mode: ActivationMode,
     unset: bool,
 ) -> Result<()> {
     vars::ensure_kubie_active()?;
@@ -20,7 +19,7 @@ pub fn namespace(
     let mut session = Session::load().context("Could not load session file")?;
 
     if namespace_name.is_none() && unset {
-        return enter_namespace(settings, &mut session, recursive, None);
+        return enter_namespace(settings, &mut session, mode, None);
     }
 
     let namespace_name = match namespace_name {
@@ -63,13 +62,13 @@ pub fn namespace(
         },
     };
 
-    enter_namespace(settings, &mut session, recursive, namespace_name)
+    enter_namespace(settings, &mut session, mode, namespace_name)
 }
 
 fn enter_namespace(
     settings: &Settings,
     session: &mut Session,
-    recursive: bool,
+    mode: ActivationMode,
     namespace_name: Option<String>,
 ) -> Result<()> {
     let mut config = kubeconfig::get_current_config()?;
@@ -90,13 +89,31 @@ fn enter_namespace(
     // Update the history, add the context and namespace to it.
     session.add_history_entry(context_name, namespace_name);
 
-    if recursive {
-        spawn_shell(settings, config, session)?;
-    } else {
-        let config_file = kubeconfig::get_kubeconfig_path()?;
-        config.write_to_file(config_file.as_path())?;
-        session.save(None)?;
-    }
+    mode.activate(settings, config, session)
+}
 
-    Ok(())
+#[cfg(test)]
+mod tests {
+    use super::namespace;
+    use crate::cmd::test_support::{env_lock, EnvVarGuard};
+    use crate::cmd::ActivationMode;
+    use crate::settings::Settings;
+
+    #[test]
+    fn test_namespace_rejects_outside_kubie_session() {
+        let _env_lock = env_lock().lock().unwrap();
+        let _active = EnvVarGuard::unset("KUBIE_ACTIVE");
+        let _kubeconfig = EnvVarGuard::unset("KUBIE_KUBECONFIG");
+        let _session = EnvVarGuard::unset("KUBIE_SESSION");
+
+        let err = namespace(
+            &Settings::default(),
+            Some("demo".to_string()),
+            ActivationMode::Eval,
+            false,
+        )
+        .unwrap_err();
+
+        assert_eq!(err.to_string(), "Not in a kubie shell!");
+    }
 }
