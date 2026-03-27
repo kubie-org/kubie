@@ -89,6 +89,9 @@ fn main() -> Result<()> {
         Kubie::GenerateCompletion(cmd) => {
             cmd::meta::generate_completion(cmd);
         }
+        Kubie::GenerateKeyBindings(cmd) => {
+            cmd::meta::generate_key_bindings(cmd);
+        }
     }
 
     Ok(())
