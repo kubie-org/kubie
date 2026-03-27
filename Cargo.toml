@@ -30,7 +30,10 @@ signal-hook = "0.4"
 tempfile = "3"
 which = "8"
 wildmatch = "2"
-skim = "0.20"
+# disable default features in skim to avoid dependency on frizbee.
+# skim >=3.4 makes the frizbee dependency non-optional, so pin to 3.3.
+# https://github.com/saghen/frizbee/issues/68
+skim = { version = "=3.3", default-features = false }
 
 [target.arm-unknown-linux-musleabi.dependencies]
 aws-lc-rs = { version = "1.16", default-features = false, features = [

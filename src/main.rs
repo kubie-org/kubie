@@ -18,8 +18,6 @@ mod vars;
 fn main() -> Result<()> {
     let settings = Settings::load()?;
 
-    let skim_options = skim::build_options(&settings.fzf)?;
-
     let kubie = Kubie::parse();
 
     match kubie {
@@ -31,7 +29,6 @@ fn main() -> Result<()> {
         } => {
             cmd::context::context(
                 &settings,
-                &skim_options,
                 context_name,
                 namespace_name,
                 kubeconfigs,
@@ -43,7 +40,7 @@ fn main() -> Result<()> {
             recursive,
             unset,
         } => {
-            cmd::namespace::namespace(&settings, &skim_options, namespace_name, recursive, unset)?;
+            cmd::namespace::namespace(&settings, namespace_name, recursive, unset)?;
         }
         Kubie::Info(info) => {
             cmd::info::info(info)?;
@@ -68,7 +65,7 @@ fn main() -> Result<()> {
             cmd::lint::lint(&settings)?;
         }
         Kubie::Edit { context_name } => {
-            cmd::edit::edit_context(&settings, &skim_options, context_name)?;
+            cmd::edit::edit_context(&settings, context_name)?;
         }
         Kubie::EditConfig => {
             cmd::edit::edit_config(&settings)?;
@@ -78,7 +75,7 @@ fn main() -> Result<()> {
             cmd::update::update()?;
         }
         Kubie::Delete { context_name } => {
-            cmd::delete::delete_context(&settings, &skim_options, context_name)?;
+            cmd::delete::delete_context(&settings, context_name)?;
         }
         Kubie::Export {
             context_name,

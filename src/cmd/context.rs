@@ -1,5 +1,4 @@
 use anyhow::Result;
-use skim::SkimOptions;
 
 use crate::cmd::{select_or_list_context, SelectResult};
 use crate::kubeconfig::{self, Installed};
@@ -64,7 +63,6 @@ fn enter_context(
 
 pub fn context(
     settings: &Settings,
-    skim_options: &SkimOptions,
     context_name: Option<String>,
     namespace_name: Option<String>,
     kubeconfigs: Vec<String>,
@@ -78,7 +76,7 @@ pub fn context(
 
     let context_name = match context_name {
         Some(context_name) => context_name,
-        None => match select_or_list_context(skim_options, &mut installed)? {
+        None => match select_or_list_context(&settings.fzf, &mut installed)? {
             SelectResult::Selected(x) => x,
             _ => return Ok(()),
         },

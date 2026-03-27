@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Context, Result};
-use skim::SkimOptions;
 
 use crate::cmd::{select_or_list_namespace, SelectResult};
 use crate::kubeconfig;
@@ -12,7 +11,6 @@ use crate::vars;
 
 pub fn namespace(
     settings: &Settings,
-    skim_options: &SkimOptions,
     namespace_name: Option<String>,
     recursive: bool,
     unset: bool,
@@ -51,7 +49,7 @@ pub fn namespace(
                     match ns_partial_matches.len() {
                         0 => return Err(anyhow!("'{}' is not a valid namespace for the context", s)),
                         1 => Some(ns_partial_matches[0].clone()),
-                        _ => match select_or_list_namespace(skim_options, Some(ns_partial_matches))? {
+                        _ => match select_or_list_namespace(&settings.fzf, Some(ns_partial_matches))? {
                             SelectResult::Selected(s) => Some(s),
                             _ => return Ok(()),
                         },
@@ -59,7 +57,7 @@ pub fn namespace(
                 }
             }
         },
-        None => match select_or_list_namespace(skim_options, None)? {
+        None => match select_or_list_namespace(&settings.fzf, None)? {
             SelectResult::Selected(s) => Some(s),
             _ => return Ok(()),
         },

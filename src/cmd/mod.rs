@@ -1,11 +1,10 @@
-use std::io::{self, Cursor, IsTerminal};
+use std::io::{self, IsTerminal};
 
 use anyhow::{bail, Context, Result};
-use skim::prelude::{Key, SkimItemReader};
-use skim::{Skim, SkimOptions};
 
 use crate::kubeconfig::Installed;
 use crate::kubectl;
+use crate::settings::Fzf;
 
 pub mod context;
 pub mod delete;
@@ -25,7 +24,7 @@ pub enum SelectResult {
     Selected(String),
 }
 
-pub fn select_or_list_context(skim_options: &SkimOptions, installed: &mut Installed) -> Result<SelectResult> {
+pub fn select_or_list_context(fzf: &Fzf, installed: &mut Installed) -> Result<SelectResult> {
     installed.contexts.sort_by(|a, b| a.item.name.cmp(&b.item.name));
     let mut context_names: Vec<_> = installed.contexts.iter().map(|c| c.item.name.clone()).collect();
 
@@ -39,18 +38,10 @@ pub fn select_or_list_context(skim_options: &SkimOptions, installed: &mut Instal
     if io::stdout().is_terminal() {
         // NOTE: skim shows the list of context names in reverse order
         context_names.reverse();
-        let item_reader = SkimItemReader::default();
-        let items = item_reader.of_bufread(Cursor::new(context_names.join("\n")));
-        let selected_items = Skim::run_with(skim_options, Some(items))
-            .map(|out| match out.final_key {
-                Key::Enter => out.selected_items,
-                _ => Vec::new(),
-            })
-            .unwrap_or_default();
-        if selected_items.is_empty() {
-            return Ok(SelectResult::Cancelled);
+        match crate::skim::select(fzf, context_names)? {
+            Some(name) => Ok(SelectResult::Selected(name)),
+            None => Ok(SelectResult::Cancelled),
         }
-        Ok(SelectResult::Selected(selected_items[0].output().to_string()))
     } else {
         for c in context_names {
             println!("{c}");
@@ -59,7 +50,7 @@ pub fn select_or_list_context(skim_options: &SkimOptions, installed: &mut Instal
     }
 }
 
-pub fn select_or_list_namespace(skim_options: &SkimOptions, namespaces: Option<Vec<String>>) -> Result<SelectResult> {
+pub fn select_or_list_namespace(fzf: &Fzf, namespaces: Option<Vec<String>>) -> Result<SelectResult> {
     let mut namespaces = match namespaces {
         Some(ns) => ns,
         None => kubectl::get_namespaces(None).context("Could not get namespaces")?,
@@ -74,18 +65,10 @@ pub fn select_or_list_namespace(skim_options: &SkimOptions, namespaces: Option<V
     if io::stdout().is_terminal() {
         // NOTE: skim shows the list of namespaces in reverse order
         namespaces.reverse();
-        let item_reader = SkimItemReader::default();
-        let items = item_reader.of_bufread(Cursor::new(namespaces.join("\n")));
-        let selected_items = Skim::run_with(skim_options, Some(items))
-            .map(|out| match out.final_key {
-                Key::Enter => out.selected_items,
-                _ => Vec::new(),
-            })
-            .unwrap_or_default();
-        if selected_items.is_empty() {
-            return Ok(SelectResult::Cancelled);
+        match crate::skim::select(fzf, namespaces)? {
+            Some(name) => Ok(SelectResult::Selected(name)),
+            None => Ok(SelectResult::Cancelled),
         }
-        Ok(SelectResult::Selected(selected_items[0].output().to_string()))
     } else {
         for n in namespaces {
             println!("{n}");
