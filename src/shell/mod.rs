@@ -13,6 +13,7 @@ use crate::vars;
 
 mod bash;
 mod detect;
+mod elvish;
 mod fish;
 mod nu;
 mod prompt;
@@ -100,6 +101,9 @@ pub fn spawn_shell(settings: &Settings, config: KubeConfig, session: &Session) -
         ShellKind::Bash => {
             env_vars.insert("KUBIE_SHELL", "bash");
         }
+        ShellKind::Elvish => {
+            env_vars.insert("KUBIE_SHELL", "elvish");
+        }
         ShellKind::Fish => {
             env_vars.insert("KUBIE_SHELL", "fish");
         }
@@ -122,6 +126,7 @@ pub fn spawn_shell(settings: &Settings, config: KubeConfig, session: &Session) -
 
     match kind {
         ShellKind::Bash => bash::spawn_shell(&info),
+        ShellKind::Elvish => elvish::spawn_shell(&info),
         ShellKind::Fish => fish::spawn_shell(&info),
         ShellKind::Xonsh => xonsh::spawn_shell(&info),
         ShellKind::Zsh => zsh::spawn_shell(&info),
