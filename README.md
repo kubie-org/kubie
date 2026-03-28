@@ -87,6 +87,30 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 * `kubie info depth` print depth of recursive contexts
 * `kubie update` will check the latest kubie version and update your local installation if needed
 
+### Eval mode (experimental)
+
+`kubie ctx --eval` outputs `export` statements instead of spawning a new shell. Evaluating that output
+switches your current shell into the selected kubie context with less startup overhead, which is
+useful for shell key bindings, wrapper functions or non-interactive scripts.
+
+```bash
+eval "$(kubie ctx --eval my-context)"
+```
+
+Command wrapper:
+
+```bash
+kctx() {
+    eval "$(kubie ctx --eval "$@")"
+}
+```
+
+```fish
+function kctx
+    eval (kubie ctx --eval $argv)
+end
+```
+
 ## Settings
 You can customize kubie's behavior with the `~/.kube/kubie.yaml` file. The settings available and their defaults are
 available below.

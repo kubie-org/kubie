@@ -34,6 +34,7 @@ wildmatch = "2"
 # skim >=3.4 makes the frizbee dependency non-optional, so pin to 3.3.
 # https://github.com/saghen/frizbee/issues/68
 skim = { version = "=3.3", default-features = false }
+shlex = "1"
 
 [target.arm-unknown-linux-musleabi.dependencies]
 aws-lc-rs = { version = "1.16", default-features = false, features = [
