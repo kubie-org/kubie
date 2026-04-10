@@ -1,20 +1,18 @@
 use anyhow::Result;
 
-use crate::cmd::{select_or_list_context, SelectResult};
+use crate::cmd::{select_or_list_context, ActivationMode, SelectResult};
 use crate::kubeconfig::{self, Installed};
 use crate::kubectl;
 use crate::session::Session;
 use crate::settings::Settings;
-use crate::shell::spawn_shell;
 use crate::state::State;
-use crate::vars;
 
 fn enter_context(
     settings: &Settings,
-    installed: Installed,
+    installed: &Installed,
     context_name: &str,
     namespace_name: Option<&str>,
-    recursive: bool,
+    mode: ActivationMode,
 ) -> Result<()> {
     let state = State::load()?;
     let mut session = Session::load()?;
@@ -50,15 +48,7 @@ fn enter_context(
         }
     }
 
-    if vars::is_kubie_active() && !recursive {
-        let path = kubeconfig::get_kubeconfig_path()?;
-        kubeconfig.write_to_file(path.as_path())?;
-        session.save(None)?;
-    } else {
-        spawn_shell(settings, kubeconfig, &session)?;
-    }
-
-    Ok(())
+    mode.activate(settings, kubeconfig, &session)
 }
 
 pub fn context(
@@ -66,7 +56,7 @@ pub fn context(
     context_name: Option<String>,
     namespace_name: Option<String>,
     kubeconfigs: Vec<String>,
-    recursive: bool,
+    mode: ActivationMode,
 ) -> Result<()> {
     let mut installed = if kubeconfigs.is_empty() {
         kubeconfig::get_installed_contexts(settings)?
@@ -82,5 +72,5 @@ pub fn context(
         },
     };
 
-    enter_context(settings, installed, &context_name, namespace_name.as_deref(), recursive)
+    enter_context(settings, &installed, &context_name, namespace_name.as_deref(), mode)
 }
