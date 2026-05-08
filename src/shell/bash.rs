@@ -80,7 +80,7 @@ unset KUBIE_PROMPT
     let mut child = cmd.spawn()?;
     child.wait()?;
 
-    if !info.settings.hooks.start_ctx.is_empty() {
+    if !info.settings.hooks.stop_ctx.is_empty() {
         let temp_exit_hook_file = tempfile::Builder::new()
             .prefix("kubie-bash-exit-hook")
             .suffix(".bash")
