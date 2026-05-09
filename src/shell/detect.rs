@@ -6,6 +6,7 @@ use anyhow::{anyhow, Context, Result};
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ShellKind {
     Bash,
+    Elvish,
     Fish,
     Xonsh,
     Zsh,
@@ -16,6 +17,7 @@ impl ShellKind {
     pub fn from_str(name: &str) -> Option<ShellKind> {
         Some(match name {
             "bash" | "dash" => ShellKind::Bash,
+            "elvish" => ShellKind::Elvish,
             "fish" => ShellKind::Fish,
             "xonsh" | "python" => ShellKind::Xonsh,
             "zsh" => ShellKind::Zsh,
