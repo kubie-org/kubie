@@ -11,13 +11,13 @@ use crate::settings::Settings;
 use crate::state;
 use crate::vars;
 
-mod bash;
+pub mod bash;
 mod detect;
-mod fish;
+pub mod fish;
 mod nu;
 mod prompt;
 mod xonsh;
-mod zsh;
+pub mod zsh;
 
 pub struct EnvVars<'n> {
     vars: HashMap<&'n str, OsString>,

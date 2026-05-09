@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use clap::{CommandFactory, Parser};
 use clap_complete::{generate, Shell};
 
@@ -107,6 +109,12 @@ pub enum Kubie {
     /// configuration file to enable completion automatically.
     #[clap(name = "generate-completion")]
     GenerateCompletion(GenerateCompletionCommand),
+
+    /// Generate shell key bindings script for quick context/namespace switching.
+    /// Enable by using `source <(kubie generate-key-bindings)`. This can be added to your shell's
+    /// configuration file to enable key bindings automatically.
+    #[clap(name = "generate-key-bindings")]
+    GenerateKeyBindings(GenerateKeyBindingsCommand),
 }
 
 #[derive(Debug, Parser)]
@@ -136,6 +144,13 @@ pub struct GenerateCompletionCommand {
     pub shell: Option<Shell>,
 }
 
+#[derive(Debug, Parser)]
+pub struct GenerateKeyBindingsCommand {
+    /// The shell to generate the key bindings script for. Determined automatically if omitted.
+    #[clap(value_enum)]
+    pub shell: Option<Shell>,
+}
+
 /// Generate a completion script.
 pub fn generate_completion(command: GenerateCompletionCommand) {
     let mut app = Kubie::command();
@@ -153,4 +168,24 @@ fn determine_shell(command: GenerateCompletionCommand) -> Shell {
         eprintln!("Could not determine shell from environment. Please specify the shell.");
         std::process::exit(1);
     }
+}
+
+/// Generate shell key bindings script.
+pub fn generate_key_bindings(command: GenerateKeyBindingsCommand) {
+    let shell = determine_shell(GenerateCompletionCommand { shell: command.shell });
+
+    let script = match shell {
+        Shell::Bash => crate::shell::bash::key_bindings(),
+        Shell::Fish => crate::shell::fish::key_bindings(),
+        Shell::Zsh => crate::shell::zsh::key_bindings(),
+        _ => {
+            eprintln!("Error: Key bindings are not yet available for {:?}.", shell);
+            eprintln!("Currently supported shells: bash, fish, zsh");
+            eprintln!();
+            std::process::exit(1);
+        }
+    };
+
+    // Ignore broken pipe errors
+    let _ = std::io::stdout().write_all(script.as_bytes());
 }
