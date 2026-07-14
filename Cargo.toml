@@ -30,7 +30,7 @@ signal-hook = "0.4"
 tempfile = "3"
 which = "8"
 wildmatch = "2"
-skim = { version = "4.7.0", default-features = false }
+skim = { version = "5.1.0", default-features = false }
 
 [target.arm-unknown-linux-musleabi.dependencies]
 aws-lc-rs = { version = "1.17", default-features = false, features = [
