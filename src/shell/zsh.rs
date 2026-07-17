@@ -26,13 +26,14 @@ elif [[ -f "/etc/zsh/zshenv" ]] ; then
 fi
 
 if [[ -f "$HOME/.zshenv" ]] ; then
-    tmp_ZDOTDIR=$ZDOTDIR
+    tmp_ZDOTDIR="$ZDOTDIR"
     source "$HOME/.zshenv"
-    # If the user has overridden $ZDOTDIR, we save that in $_KUBIE_USER_ZDOTDIR for later reference
-    # and reset $ZDOTDIR
+    # If the user has overridden $ZDOTDIR, we save that in $_KUBIE_USER_ZDOTDIR for later reference,
+    # copy its contents and reset $ZDOTDIR
     if [[ "$tmp_ZDOTDIR" != "$ZDOTDIR" ]]; then
-        _KUBIE_USER_ZDOTDIR=$ZDOTDIR
-        ZDOTDIR=$tmp_ZDOTDIR
+        _KUBIE_USER_ZDOTDIR="$ZDOTDIR"
+        cp -r "$ZDOTDIR/." "$tmp_ZDOTDIR"
+        ZDOTDIR="$tmp_ZDOTDIR"
         unset tmp_ZDOTDIR
     fi
 fi
