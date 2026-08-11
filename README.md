@@ -77,7 +77,8 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
   in the given namespace
 * `kubie exec <wildcard> <namespace> -e <cmd> <args>...` execute a command in all the contexts matched by the wildcard and
   in the given namespace but fail early if any of the commands executed return a non-zero exit code
-* `kubie export <context> <namespace>` prints the path to an isolated config file for a context and namespace
+* `kubie export [context] [namespace]` print the path to an isolated config file for a context, from a menu if none
+  is given
 * `kubie edit` display a selectable menu of contexts to edit
 * `kubie edit <context>` edit the file that contains this context
 * `kubie edit-config` edit kubie's own config file
