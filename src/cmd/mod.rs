@@ -24,6 +24,11 @@ pub enum SelectResult {
     Selected(String),
 }
 
+/// The menu needs a terminal on stdin. When stdout is captured, the caller wants the plain list.
+fn can_prompt() -> bool {
+    io::stdin().is_terminal() && io::stdout().is_terminal()
+}
+
 pub fn select_or_list_context(fzf: &Fzf, installed: &mut Installed) -> Result<SelectResult> {
     installed.contexts.sort_by(|a, b| a.item.name.cmp(&b.item.name));
     let mut context_names: Vec<_> = installed.contexts.iter().map(|c| c.item.name.clone()).collect();
@@ -35,7 +40,7 @@ pub fn select_or_list_context(fzf: &Fzf, installed: &mut Installed) -> Result<Se
         return Ok(SelectResult::Selected(context_names[0].clone()));
     }
 
-    if io::stdout().is_terminal() {
+    if can_prompt() {
         // NOTE: skim shows the list of context names in reverse order
         context_names.reverse();
         match crate::skim::select(fzf, context_names)? {
@@ -62,7 +67,7 @@ pub fn select_or_list_namespace(fzf: &Fzf, namespaces: Option<Vec<String>>) -> R
         bail!("No namespaces found");
     }
 
-    if io::stdout().is_terminal() {
+    if can_prompt() {
         // NOTE: skim shows the list of namespaces in reverse order
         namespaces.reverse();
         match crate::skim::select(fzf, namespaces)? {
