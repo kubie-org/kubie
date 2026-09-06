@@ -6,8 +6,10 @@ use crate::kubeconfig::Installed;
 use crate::kubectl;
 use crate::settings::Fzf;
 
+mod activation;
 pub mod context;
 pub mod delete;
+pub(crate) mod eval;
 pub mod edit;
 pub mod exec;
 pub mod export;
@@ -17,6 +19,8 @@ pub mod meta;
 pub mod namespace;
 #[cfg(feature = "update")]
 pub mod update;
+
+pub use activation::ActivationMode;
 
 pub enum SelectResult {
     Cancelled,
@@ -35,7 +39,7 @@ pub fn select_or_list_context(fzf: &Fzf, installed: &mut Installed) -> Result<Se
         return Ok(SelectResult::Selected(context_names[0].clone()));
     }
 
-    if io::stdout().is_terminal() {
+    if io::stdin().is_terminal() {
         // NOTE: skim shows the list of context names in reverse order
         context_names.reverse();
         match crate::skim::select(fzf, context_names)? {
@@ -62,7 +66,7 @@ pub fn select_or_list_namespace(fzf: &Fzf, namespaces: Option<Vec<String>>) -> R
         bail!("No namespaces found");
     }
 
-    if io::stdout().is_terminal() {
+    if io::stdin().is_terminal() {
         // NOTE: skim shows the list of namespaces in reverse order
         namespaces.reverse();
         match crate::skim::select(fzf, namespaces)? {

@@ -4,7 +4,8 @@ use std::process::Command;
 
 use anyhow::{anyhow, Result};
 
-use self::detect::{detect, ShellKind};
+pub use self::detect::{detect as detect_shell, ShellKind};
+use self::detect::detect;
 use crate::kubeconfig::KubeConfig;
 use crate::session::Session;
 use crate::settings::Settings;

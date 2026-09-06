@@ -1,8 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 
+use cmd::ActivationMode;
 use cmd::meta::Kubie;
 use settings::Settings;
+use vars::is_kubie_active;
 
 mod cmd;
 mod ioutil;
@@ -26,21 +28,25 @@ fn main() -> Result<()> {
             context_name,
             kubeconfigs,
             recursive,
+            eval,
         } => {
+            let mode = ActivationMode::resolve(eval, recursive, is_kubie_active());
             cmd::context::context(
                 &settings,
                 context_name,
                 namespace_name,
                 kubeconfigs,
-                recursive,
+                mode,
             )?;
         }
         Kubie::Namespace {
             namespace_name,
             recursive,
+            eval,
             unset,
         } => {
-            cmd::namespace::namespace(&settings, namespace_name, recursive, unset)?;
+            let mode = ActivationMode::resolve(eval, recursive, is_kubie_active());
+            cmd::namespace::namespace(&settings, namespace_name, mode, unset)?;
         }
         Kubie::Info(info) => {
             cmd::info::info(info)?;
