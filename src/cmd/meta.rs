@@ -67,6 +67,9 @@ pub enum Kubie {
     /// Prints the path to an isolated configuration file for a context.
     #[clap(name = "export")]
     Export {
+        /// Print the variables that switch the current shell to the context, as KEY=value lines.
+        #[clap(long)]
+        session: bool,
         /// Name of the context to export. Prompts when omitted.
         context_name: Option<String>,
         /// Namespace in the context. Defaults to the last one used with it.

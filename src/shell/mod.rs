@@ -3,6 +3,7 @@ use std::ffi::OsString;
 use std::process::Command;
 
 use anyhow::{anyhow, Result};
+use tempfile::NamedTempFile;
 
 use self::detect::{detect, ShellKind};
 use crate::kubeconfig::KubeConfig;
@@ -45,23 +46,31 @@ pub struct ShellSpawnInfo<'s, 'n> {
     prompt: String,
 }
 
+/// Write the kubeconfig and session files a kubie shell runs with. Both are removed when
+/// dropped, unless kept.
+pub fn write_shell_files(config: &KubeConfig, session: &Session) -> Result<(NamedTempFile, NamedTempFile)> {
+    let config_file = tempfile::Builder::new()
+        .prefix("kubie-config")
+        .suffix(".yaml")
+        .tempfile()?;
+    config.write_to_file(config_file.path())?;
+
+    let session_file = tempfile::Builder::new()
+        .prefix("kubie-session")
+        .suffix(".json")
+        .tempfile()?;
+    session.save(Some(session_file.path()))?;
+
+    Ok((config_file, session_file))
+}
+
 pub fn spawn_shell(settings: &Settings, config: KubeConfig, session: &Session) -> Result<()> {
     let kind = match &settings.shell {
         Some(shell) => ShellKind::from_str(shell).ok_or_else(|| anyhow!("Invalid shell setting: {}", shell))?,
         None => detect()?,
     };
 
-    let temp_config_file = tempfile::Builder::new()
-        .prefix("kubie-config")
-        .suffix(".yaml")
-        .tempfile()?;
-    config.write_to_file(temp_config_file.path())?;
-
-    let temp_session_file = tempfile::Builder::new()
-        .prefix("kubie-session")
-        .suffix(".json")
-        .tempfile()?;
-    session.save(Some(temp_session_file.path()))?;
+    let (temp_config_file, temp_session_file) = write_shell_files(&config, session)?;
 
     let depth = vars::get_depth();
     let next_depth = depth + 1;
