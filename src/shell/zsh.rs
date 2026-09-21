@@ -53,6 +53,10 @@ elif [[ -f "/etc/zsh/zprofile" && "$KUBIE_LOGIN_SHELL" == "1" ]] ; then
     source "/etc/zsh/zprofile"
 fi
 
+if [[ -f "$ZDOTDIR/zprofile"]] ; then
+    source "$ZDOTDIR/zprofile"
+fi
+
 if [[ -f "${{_KUBIE_USER_ZDOTDIR:-$HOME}}/.zprofile" && "$KUBIE_LOGIN_SHELL" == "1" ]] ; then
     source "${{_KUBIE_USER_ZDOTDIR:-$HOME}}/.zprofile"
 fi
