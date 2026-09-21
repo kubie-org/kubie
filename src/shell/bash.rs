@@ -100,3 +100,7 @@ unset KUBIE_PROMPT
 
     Ok(())
 }
+
+pub fn key_bindings() -> &'static str {
+    include_str!("../../shell/key-bindings/kubie.bash")
+}

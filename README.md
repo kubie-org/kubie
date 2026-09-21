@@ -58,6 +58,52 @@ kubie generate-completion fish | source
 See the [clap-complete docs](https://docs.rs/clap_complete/latest/clap_complete/aot/enum.Shell.html) for all supported
 shells.
 
+### Key Bindings
+
+Kubie provides shell key bindings for quick context and namespace switching.
+
+
+#### Installation
+
+Add to your shell's rc file:
+
+```sh
+# bash / zsh
+source <(kubie generate-key-bindings)
+
+# fish
+kubie generate-key-bindings | source
+```
+
+> [!NOTE]
+> In bash, `Alt-k` and `Alt-n` override readline defaults (`kill-word` and `non-incremental-forward-search-history`).
+> Use the customization variables below to rebind if needed.
+
+#### Default Key Bindings
+
+- `Alt-k` - Open interactive context selector (`kubie ctx`)
+- `Alt-n` - Open interactive namespace selector (`kubie ns`)
+- `Alt-K` - Switch to previous context (`kubie ctx -`)
+- `Alt-N` - Switch to previous namespace (`kubie ns -`)
+
+#### Customization
+
+You can customize the key bindings by setting environment variables before sourcing the script:
+
+```sh
+# Example: Change Alt-k to Ctrl-k
+export KUBIE_CTX_KEY='^k'
+
+# Example: Disable a specific binding
+export KUBIE_NS_KEY=''
+```
+
+Available customization variables:
+- `KUBIE_CTX_KEY` - Context selector (default: `\ek` = Alt-k)
+- `KUBIE_NS_KEY` - Namespace selector (default: `\en` = Alt-n)
+- `KUBIE_PREV_CTX_KEY` - Previous context (default: `\eK` = Alt-K)
+- `KUBIE_PREV_NS_KEY` - Previous namespace (default: `\eN` = Alt-N)
+
 ## Usage
 Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 
@@ -85,6 +131,8 @@ Selectable menus will be available when using `kubie ctx` and `kubie ns`.
 * `kubie info ctx` print name of current context
 * `kubie info ns` print name of current namespace
 * `kubie info depth` print depth of recursive contexts
+* `kubie generate-completion` generate shell completion script
+* `kubie generate-key-bindings` generate shell key bindings script
 * `kubie update` will check the latest kubie version and update your local installation if needed
 
 ## Settings
