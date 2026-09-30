@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use anyhow::{anyhow, bail, Context as _, Result};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_yaml::{Mapping, Value};
 use wildmatch::WildMatch;
 
@@ -16,13 +16,25 @@ use crate::settings::Settings;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct KubeConfig {
+    #[serde(default, deserialize_with = "null_as_default")]
     pub clusters: Vec<NamedCluster>,
+    #[serde(default, deserialize_with = "null_as_default")]
     pub users: Vec<NamedUser>,
+    #[serde(default, deserialize_with = "null_as_default")]
     pub contexts: Vec<NamedContext>,
     #[serde(rename = "current-context")]
     pub current_context: Option<String>,
     #[serde(flatten)]
     pub others: HashMap<String, Value>,
+}
+
+// kubectl writes empty lists as `null`, e.g. `clusters: null`.
+fn null_as_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Default + Deserialize<'de>,
+{
+    Ok(Option::deserialize(deserializer)?.unwrap_or_default())
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -313,4 +325,44 @@ pub fn get_kubeconfig_path() -> Result<PathBuf> {
 
 pub fn get_current_config() -> Result<KubeConfig> {
     ioutil::read_yaml(get_kubeconfig_path()?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_kubeconfig_null_lists() {
+        let kubeconfig: KubeConfig = serde_yaml::from_str(
+            "apiVersion: v1
+clusters: null
+contexts: null
+current-context: cluster1
+kind: Config
+preferences: {}
+users:
+",
+        )
+        .unwrap();
+        assert!(kubeconfig.clusters.is_empty());
+        assert!(kubeconfig.contexts.is_empty());
+        assert!(kubeconfig.users.is_empty());
+        assert_eq!(kubeconfig.current_context.as_deref(), Some("cluster1"));
+    }
+
+    #[test]
+    fn test_kubeconfig_missing_lists() {
+        let kubeconfig: KubeConfig = serde_yaml::from_str(
+            "apiVersion: v1
+kind: Config
+users:
+- name: oidc
+  user: {}
+",
+        )
+        .unwrap();
+        assert!(kubeconfig.clusters.is_empty());
+        assert!(kubeconfig.contexts.is_empty());
+        assert_eq!(kubeconfig.users[0].name, "oidc");
+    }
 }
