@@ -197,7 +197,9 @@ impl Installed {
             .cloned()
             .ok_or_else(|| anyhow!("Could not find context {}", context_name))?;
 
-        context_src.item.context.namespace = namespace_name.map(Into::into);
+        if let Some(namespace_name) = namespace_name {
+            context_src.item.context.namespace = Some(namespace_name.into());
+        }
         let kubeconfig_dir = context_src.source.parent().expect("kubeconfig path should have a parent dir");
 
         let cluster_src = self
@@ -313,4 +315,52 @@ pub fn get_kubeconfig_path() -> Result<PathBuf> {
 
 pub fn get_current_config() -> Result<KubeConfig> {
     ioutil::read_yaml(get_kubeconfig_path()?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn installed_from_yaml(yaml: &str) -> Installed {
+        let source = Rc::new(PathBuf::from("/kubeconfig"));
+        let kubeconfig: KubeConfig = serde_yaml::from_str(yaml).unwrap();
+        Installed {
+            clusters: kubeconfig
+                .clusters
+                .into_iter()
+                .map(|x| Sourced::new(&source, x))
+                .collect(),
+            users: kubeconfig.users.into_iter().map(|x| Sourced::new(&source, x)).collect(),
+            contexts: kubeconfig
+                .contexts
+                .into_iter()
+                .map(|x| Sourced::new(&source, x))
+                .collect(),
+        }
+    }
+
+    const TEAM_KUBECONFIG: &str = "clusters:
+- name: c1
+  cluster: {}
+users:
+- name: u1
+  user: {}
+contexts:
+- name: team
+  context: {cluster: c1, user: u1, namespace: team-a}
+";
+
+    #[test]
+    fn test_make_kubeconfig_keeps_context_namespace() {
+        let installed = installed_from_yaml(TEAM_KUBECONFIG);
+        let kubeconfig = installed.make_kubeconfig_for_context("team", None::<&str>).unwrap();
+        assert_eq!(kubeconfig.contexts[0].context.namespace.as_deref(), Some("team-a"));
+    }
+
+    #[test]
+    fn test_make_kubeconfig_overrides_context_namespace() {
+        let installed = installed_from_yaml(TEAM_KUBECONFIG);
+        let kubeconfig = installed.make_kubeconfig_for_context("team", Some("other")).unwrap();
+        assert_eq!(kubeconfig.contexts[0].context.namespace.as_deref(), Some("other"));
+    }
 }
