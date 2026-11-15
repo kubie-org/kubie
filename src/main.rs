@@ -78,10 +78,11 @@ fn main() -> Result<()> {
             cmd::delete::delete_context(&settings, context_name)?;
         }
         Kubie::Export {
+            session,
             context_name,
             namespace_name,
         } => {
-            cmd::export::export(&settings, context_name, namespace_name)?;
+            cmd::export::export(&settings, context_name, namespace_name, session)?;
         }
         Kubie::GenerateCompletion(cmd) => {
             cmd::meta::generate_completion(cmd);

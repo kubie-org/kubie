@@ -64,13 +64,16 @@ pub enum Kubie {
         args: Vec<String>,
     },
 
-    /// Prints the path to an isolated configuration file for a context and namespace.
+    /// Prints the path to an isolated configuration file for a context.
     #[clap(name = "export")]
     Export {
-        /// Name of the context to export.
-        context_name: String,
-        /// Name of the namespace in the context. This is mandatory to avoid potential errors.
-        namespace_name: String,
+        /// Print the variables that switch the current shell to the context, as KEY=value lines.
+        #[clap(long)]
+        session: bool,
+        /// Name of the context to export. Prompts when omitted.
+        context_name: Option<String>,
+        /// Namespace in the context. Defaults to the last one used with it.
+        namespace_name: Option<String>,
     },
 
     /// Check the Kubernetes config files for issues.

@@ -129,7 +129,7 @@ impl Installed {
             let matcher = WildMatch::new(p);
             let m: Vec<_> = self.contexts.iter().filter(|s| matcher.matches(&s.item.name)).collect();
             if patterns.len() > 1 && m.is_empty() {
-                println!("WARNING: No context matching {p}");
+                eprintln!("WARNING: No context matching {p}");
             }
             result.extend(m);
         }
